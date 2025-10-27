@@ -1,0 +1,43 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+<Button
+        android:id="@+id/btnRecordAudio"
+        android:text="Grabar Audio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/btnStopRecording"
+        android:text="Detener Grabación"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"/>
+
+    <Button
+        android:id="@+id/btnPlayAudio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reproducir Audio"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:id="@+id/btnAnalyze"
+        android:text="Analizar Audio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"/>
+
+    <TextView
+        android:id="@+id/txtAudioResult"
+        android:text="Resultado..."
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"/>
+</LinearLayout>

@@ -19,7 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "proyecto apps"
+rootProject.name = "HealthConnectAI"
 include(":app")
-
  
