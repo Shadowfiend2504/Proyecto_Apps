@@ -1,47 +1,146 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center_horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FAFAFA"
     tools:context=".ImageAnalysisActivity">
 
-    <ImageView
-        android:id="@+id/imgPreview"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:scaleType="centerCrop"
-        android:background="#E0E0E0"
-        android:layout_marginBottom="16dp" />
-
-    <Button
-        android:id="@+id/btnTakePhoto"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tomar Foto"
-        android:backgroundTint="@color/purple_500"
-        android:textColor="@android:color/white"
-        android:layout_marginBottom="8dp" />
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
 
-    <Button
-        android:id="@+id/btnAnalyzeImage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Analizar Imagen"
-        android:backgroundTint="@color/teal_200"
-        android:textColor="@android:color/white"
-        android:layout_marginBottom="16dp" />
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_camera"
+            android:tint="#03A9F4"
+            android:layout_marginBottom="16dp" />
 
-    <TextView
-        android:id="@+id/txtResult"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Resultado del análisis aparecerá aquí"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:textColor="@android:color/black" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Análisis de Imagen"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginBottom="8dp" />
 
-</LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Toma o analiza una imagen con inteligencia artificial para detectar signos o patrones visuales relevantes en tu salud."
+            android:textColor="#666"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
 
+        <!-- 📸 Tomar Foto -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/btnTakePhoto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📸 Tomar Foto"
+                android:backgroundTint="#03A9F4"
+                android:textColor="#FFF"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Captura una imagen directamente desde la cámara para iniciar el análisis visual."
+                android:textColor="#555"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- 🧠 Analizar Imagen -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/btnAnalyzeImage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🧠 Analizar Imagen"
+                android:backgroundTint="#009688"
+                android:textColor="#FFF"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Procesa la foto capturada mediante inteligencia artificial para obtener resultados inmediatos."
+                android:textColor="#555"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- 🖼️ Vista previa -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Vista previa de la imagen:"
+                android:textColor="#333"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+
+            <ImageView
+                android:id="@+id/imagePreview"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_image_placeholder"
+                android:background="@drawable/image_border"
+                android:contentDescription="Vista previa"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/txtImageResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Esperando análisis..."
+                android:textColor="#555"
+                android:textSize="14sp"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- 🏠 Volver al Inicio -->
+        <Button
+            android:id="@+id/btnBackHomeImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🏠 Volver al Inicio"
+            android:backgroundTint="#9E9E9E"
+            android:textColor="#FFF"
+            android:textAllCaps="false"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>

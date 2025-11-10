@@ -1,64 +1,288 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center"
-    android:background="#F8F9FA">
+    android:fillViewport="true"
+    android:background="#FFFFFF"
+    tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/txtTitle"
-        android:text="HealthConnect AI"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="32dp"
-        android:gravity="center"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/btnAudio"
-        android:text="Analizar Audio"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <Button
-        android:id="@+id/btnImage"
-        android:text="Analizar Imagen"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        <!-- Barra superior -->
 
-    <Button
-        android:id="@+id/btnMap"
-        android:text="Ver Casos en el Mapa"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        <!-- Título -->
+        <TextView
+            android:id="@+id/txtTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bienvenido a HealthConnect AI"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#2E2E2E"
+            android:gravity="center"
+            android:layout_marginBottom="6dp" />
 
-    <Button
-        android:id="@+id/btnResults"
-        android:text="Ver Resultados"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        <!-- Subtítulo -->
+        <TextView
+            android:id="@+id/txtSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Selecciona una opción para analizar tu salud"
+            android:textSize="15sp"
+            android:textColor="#777777"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
 
-    <Button
-        android:id="@+id/btnViewTasks"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="📋 Ver Tareas y Sincronizar API"
-        android:layout_marginTop="12dp"
-        android:backgroundTint="@color/teal_200"
-        android:textColor="@android:color/white" />
+        <!-- CARD: Analizar Audio -->
+        <LinearLayout
+            android:id="@+id/cardAudio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
 
-    <Button
-        android:id="@+id/btnAlerts"
-        android:text="Ver Alertas y Recomendaciones"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_mic"
+                android:contentDescription="Icono micrófono"
+                android:tint="#4CAF50"
+                android:layout_marginEnd="16dp" />
 
-</LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Analizar Audio"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#222" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Detecta patrones o posibles síntomas por voz."
+                    android:textSize="14sp"
+                    android:textColor="#666" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CARD: Analizar Imagen -->
+        <LinearLayout
+            android:id="@+id/cardImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_camera"
+                android:contentDescription="Icono cámara"
+                android:tint="#3F51B5"
+                android:layout_marginEnd="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Analizar Imagen"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#222" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Usa la cámara para detectar posibles anomalías."
+                    android:textSize="14sp"
+                    android:textColor="#666" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CARD: Ver en el Mapa -->
+        <LinearLayout
+            android:id="@+id/cardMap"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_map"
+                android:contentDescription="Icono mapa"
+                android:tint="#009688"
+                android:layout_marginEnd="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ver Casos en el Mapa"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#222" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Encuentra hospitales y zonas médicas cercanas."
+                    android:textSize="14sp"
+                    android:textColor="#666" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CARD: Resultados -->
+        <LinearLayout
+            android:id="@+id/cardResults"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_results"
+                android:contentDescription="Icono resultados"
+                android:tint="#FF9800"
+                android:layout_marginEnd="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ver Resultados"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#222" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Consulta tus últimos análisis y diagnósticos."
+                    android:textSize="14sp"
+                    android:textColor="#666" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CARD: Ver Tareas y Sincronizar API -->
+        <LinearLayout
+            android:id="@+id/cardTasks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_tasks"
+                android:contentDescription="Icono tareas"
+                android:tint="#607D8B"
+                android:layout_marginEnd="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ver Tareas y Sincronizar API"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#222" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Agrega recetas médicas o condiciones existentes para seguimiento."
+                    android:textSize="14sp"
+                    android:textColor="#666" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CARD: Alertas y Recomendaciones -->
+        <LinearLayout
+            android:id="@+id/cardAlerts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_alert"
+                android:contentDescription="Icono alertas"
+                android:tint="#E91E63"
+                android:layout_marginEnd="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ver Alertas y Recomendaciones"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#222" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Revisa las notificaciones importantes de tu salud y sugerencias médicas."
+                    android:textSize="14sp"
+                    android:textColor="#666" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

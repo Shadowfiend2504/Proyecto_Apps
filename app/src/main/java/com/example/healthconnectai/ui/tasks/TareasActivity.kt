@@ -50,6 +50,10 @@ class TareasActivity : AppCompatActivity() {
             // Log para debugging
             android.util.Log.d("TareasActivity", "Iniciando sincronización con Google Sheet CSV")
         }
+
+        binding.btnBackHomeTareas.setOnClickListener {
+            finish() // Regresar al inicio
+        }
     }
 
     private fun showAddDialog() {

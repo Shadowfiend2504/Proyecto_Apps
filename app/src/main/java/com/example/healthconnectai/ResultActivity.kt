@@ -1,6 +1,5 @@
 package com.example.healthconnectai
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.healthconnectai.databinding.ActivityResultBinding
@@ -14,14 +13,15 @@ class ResultActivity : AppCompatActivity() {
         binding = ActivityResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val resultText = intent.getStringExtra("RESULT") ?: "Sin resultados disponibles."
-        binding.txtFinalResult.text = resultText
+        binding.txtFinalResult.text = """
+            🧠 Diagnóstico preliminar: Sin anomalías detectadas.
+            
+            ✅ Salud general: Estable.
+            ⚙️ Recomendación: Mantén tu rutina saludable y realiza chequeos periódicos.
+        """.trimIndent()
 
-        // ✅ Botón para volver al inicio
-        binding.btnBackHome.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()
+        binding.btnBackHomeResults.setOnClickListener {
+            finish() // Regresar al inicio
         }
     }
 }

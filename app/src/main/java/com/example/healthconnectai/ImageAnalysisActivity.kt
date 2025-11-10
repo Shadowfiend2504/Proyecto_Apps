@@ -1,88 +1,69 @@
 package com.example.healthconnectai
 
 import android.Manifest
-import android.content.pm.PackageManager
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.example.healthconnectai.databinding.ActivityImageAnalysisBinding
 
 class ImageAnalysisActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityImageAnalysisBinding
-    private val CAMERA_REQUEST_CODE = 100
-    private val PERMISSION_REQUEST_CODE = 200
-    
-    // Use Activity Result API para obtener la imagen (TakePicturePreview)
-    private val takePicturePreview = registerForActivityResult(
-        ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        if (bitmap != null) {
-            binding.imgPreview.setImageBitmap(bitmap)
-            Toast.makeText(this, "Foto capturada correctamente", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "No se obtuvo imagen", Toast.LENGTH_SHORT).show()
+
+    // Launcher para pedir permiso de cámara
+    private val requestCameraPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                openCameraInternal()
+            } else {
+                Toast.makeText(this, "Permiso de cámara denegado.", Toast.LENGTH_SHORT).show()
+            }
         }
-    }
+
+    // Launcher moderno para capturar imagen
+    private val takePictureLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data = result.data
+                val imageBitmap = data?.extras?.get("data") as? Bitmap
+                if (imageBitmap != null) {
+                    binding.imagePreview.setImageBitmap(imageBitmap)
+                    Toast.makeText(this, "Imagen capturada correctamente.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "No se recibió imagen.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this, "Captura cancelada.", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityImageAnalysisBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Botón para abrir cámara
         binding.btnTakePhoto.setOnClickListener {
-            checkCameraPermissionAndOpen()
+            requestCameraPermission.launch(Manifest.permission.CAMERA)
+        }
+        binding.btnBackHomeImage.setOnClickListener {
+            finish()
         }
 
-        binding.btnAnalyzeImage.setOnClickListener {
-            binding.txtResult.text =
-                "Análisis: posible anomalía detectada.\nRecomendación: consultar al médico."
-        }
     }
 
-    private fun checkCameraPermissionAndOpen() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.CAMERA),
-                PERMISSION_REQUEST_CODE
-            )
-        } else {
-            openCamera()
-        }
-    }
-
-    private fun openCamera() {
-        // Primero comprobar si el dispositivo tiene hardware de cámara
-        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
-            Toast.makeText(this, "Este dispositivo no dispone de cámara", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Con TakePicturePreview no dependemos de una aplicación externa: lanzamos la captura directamente
-        takePicturePreview.launch(null)
-    }
-    // Ya no usamos onActivityResult con la Activity Result API
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQUEST_CODE && grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
-            openCamera()
-        } else {
-            Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+    private fun openCameraInternal() {
+        try {
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            takePictureLauncher.launch(cameraIntent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Error abriendo la cámara: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 }
-

@@ -14,12 +14,12 @@ class AlertsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.txtAlerts.text = """
-            ⚠️ Alertas y Recomendaciones:
-
-            - Mantente hidratado si presentas tos o fiebre.
-            - Usa tapabocas en lugares cerrados.
-            - Consulta a un médico si tus síntomas persisten.
-            - Verifica alertas sanitarias locales en el mapa.
+            ⚠️ Mantente hidratado y evita exposición prolongada al sol.
+            😷 Si tienes tos persistente o fiebre, consulta con tu médico.
+            💊 Toma tus medicamentos a la hora indicada.
+            🧘 Practica ejercicios de respiración si sientes estrés.
         """.trimIndent()
+
+        binding.btnBackHomeAlerts.setOnClickListener { finish() }
     }
 }

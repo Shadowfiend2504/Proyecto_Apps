@@ -1,43 +1,161 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="16dp"
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FAFAFA"
+    tools:context=".AudioAnalysisActivity">
 
-
-<Button
-        android:id="@+id/btnRecordAudio"
-        android:text="Grabar Audio"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/btnStopRecording"
-        android:text="Detener Grabación"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"/>
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
 
-    <Button
-        android:id="@+id/btnPlayAudio"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Reproducir Audio"
-        android:layout_marginTop="8dp"
-        android:backgroundTint="@color/teal_200"
-        android:textColor="@android:color/white" />
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_microphone"
+            android:tint="#4CAF50"
+            android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/btnAnalyze"
-        android:text="Analizar Audio"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Análisis de Audio"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginBottom="8dp" />
 
-    <TextView
-        android:id="@+id/txtAudioResult"
-        android:text="Resultado..."
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"/>
-</LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Graba tu voz, analiza el sonido y detecta posibles anomalías respiratorias o patrones de salud."
+            android:textColor="#666"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 🎙️ Botón: Grabar Audio -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/btnStart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🎙️ Grabar Audio"
+                android:backgroundTint="#4CAF50"
+                android:textColor="#FFF"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Inicia una nueva grabación para analizar tu voz y respiración."
+                android:textColor="#555"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- ⏹️ Botón: Detener Grabación -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/btnStop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="⏹️ Detener Grabación"
+                android:backgroundTint="#FF9800"
+                android:textColor="#FFF"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Finaliza la grabación y guarda el audio para su posterior análisis."
+                android:textColor="#555"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- 🔊 Botón: Reproducir Audio -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/btnPlay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🔊 Reproducir Audio"
+                android:backgroundTint="#3F51B5"
+                android:textColor="#FFF"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Escucha tu grabación antes de enviarla al análisis."
+                android:textColor="#555"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- 🤖 Botón: Analizar Audio -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/btnAnalyzeAudio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🤖 Analizar Audio"
+                android:backgroundTint="#009688"
+                android:textColor="#FFF"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Procesa el audio con inteligencia artificial para identificar patrones de salud."
+                android:textColor="#555"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- 🏠 Botón: Volver -->
+        <Button
+            android:id="@+id/btnBackHomeAudio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🏠 Volver al Inicio"
+            android:backgroundTint="#9E9E9E"
+            android:textColor="#FFF"
+            android:textAllCaps="false"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>
