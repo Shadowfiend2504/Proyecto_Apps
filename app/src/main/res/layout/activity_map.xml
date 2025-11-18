@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#EDE9E3">
+
+    <!-- MapFragment integrado -->
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MapActivity" />
 
     <!-- Pantalla de carga -->
     <LinearLayout
@@ -12,7 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#EDE9E3"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -25,10 +34,64 @@
             android:id="@+id/txtLoading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Buscando hospitales cercanos..."
+            android:text="Cargando mapa de hospitales..."
             android:textSize="18sp"
             android:textColor="#333"
             android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <!-- Tarjeta de información de hospital seleccionado -->
+    <LinearLayout
+        android:id="@+id/hospitalInfoCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom"
+        android:background="@drawable/rounded_bottom_card"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:elevation="8dp">
+
+        <TextView
+            android:id="@+id/hospitalName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/hospitalAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#666"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btnCloseCard"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cerrar"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btnOpenInMaps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Abrir en Maps"
+                android:backgroundTint="#4CAF50" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </FrameLayout>

@@ -146,6 +146,33 @@
                 android:layout_marginTop="8dp" />
         </LinearLayout>
 
+        <!-- 📜 Botón: Ver Historial -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/btnViewHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📜 Ver Historial de Grabaciones"
+                android:backgroundTint="#FF5722"
+                android:textColor="#FFF"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Accede al historial de tus grabaciones anteriores y elimina las que no necesites."
+                android:textColor="#555"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
         <!-- 🏠 Botón: Volver -->
         <Button
             android:id="@+id/btnBackHomeAudio"

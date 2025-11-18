@@ -1,13 +1,13 @@
-package com.healthconnectai
+package com.example.healthconnectai.test
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.healthconnectai.AudioAnalysisActivity
 import com.example.healthconnectai.MapActivity
-import com.healthconnectai.databinding.ActivityMainBinding
+import com.example.healthconnectai.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class TestMainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Botones que llevan a las otras pantallas
+        // Botones que llevan a las otras pantallas (versión androidTest)
         binding.btnImageAnalysis.setOnClickListener {
             startActivity(Intent(this, ImageAnalysisActivity::class.java))
         }

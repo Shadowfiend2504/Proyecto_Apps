@@ -4,6 +4,19 @@ plugins {
     id("kotlin-kapt") // ✅ Necesario para Room (procesamiento de anotaciones)
 }
 
+import java.util.Properties
+
+// Cargar local.properties para obtener secretos locales (no se deben commitear)
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) {
+        f.reader().use { this.load(it) }
+    }
+}
+val geminiApiKeyFromLocal: String = localProps.getProperty("GEMINI_API_KEY") ?: ""
+val googlePlacesApiKeyFromLocal: String = localProps.getProperty("GOOGLE_PLACES_API_KEY") ?: ""
+val mapsApiKeyFromLocal: String = localProps.getProperty("GOOGLE_MAPS_API_KEY") ?: ""
+
 android {
     namespace = "com.example.healthconnectai"
     compileSdk = 34
@@ -19,7 +32,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKeyFromLocal\"")
+            buildConfigField("String", "GOOGLE_PLACES_API_KEY", "\"$googlePlacesApiKeyFromLocal\"")
+            manifestPlaceholders["MAPS_API_KEY"] = mapsApiKeyFromLocal
+        }
         release {
+            buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKeyFromLocal\"")
+            buildConfigField("String", "GOOGLE_PLACES_API_KEY", "\"$googlePlacesApiKeyFromLocal\"")
+            manifestPlaceholders["MAPS_API_KEY"] = mapsApiKeyFromLocal
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -30,6 +51,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -60,6 +82,7 @@ dependencies {
     // --- GOOGLE MAPS ---
     implementation("com.google.android.gms:play-services-maps:18.1.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.libraries.places:places:3.2.0")
 
     // --- ROOM (BASE DE DATOS LOCAL) ---
     implementation("androidx.room:room-runtime:2.6.0")
@@ -85,6 +108,16 @@ dependencies {
 
     // --- RECYCLERVIEW (para listas de tareas) ---
     implementation("androidx.recyclerview:recyclerview:1.3.1")
+
+    // --- GOOGLE GENERATIVE AI (GEMINI) - ✨ NUEVA ---
+        // Usando REST API con OkHttp y Retrofit (ya incluidos arriba)
+        // No necesita dependencias adicionales
+    
+    // Para manejo avanzado de imágenes
+    implementation("androidx.graphics:graphics-core:1.0.0-alpha01")
+    
+    // Para parseo JSON
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // --- TESTS ---
     testImplementation("junit:junit:4.13.2")

@@ -1,0 +1,21 @@
+# ARCHIVO: local.properties
+# ⚠️ IMPORTANTE: Este archivo NO debe estar en Git
+# Se usa para guardar variables sensibles como API keys
+
+# Google Gemini API Key
+# Obtén tu key en: https://ai.google.dev/
+# ⚠️ NUNCA compartas esta key en GitHub
+GEMINI_API_KEY=tu_api_key_aqui_ejemplo
+
+# Google Places API Key
+# Obtén tu key en: https://console.cloud.google.com/
+# ⚠️ NUNCA compartas esta key en GitHub
+GOOGLE_PLACES_API_KEY=tu_api_key_aqui_ejemplo
+
+# Google Maps API Key
+# Obtén tu key en: https://console.cloud.google.com/
+# ⚠️ NUNCA compartas esta key en GitHub
+GOOGLE_MAPS_API_KEY=tu_api_key_aqui_ejemplo
+
+# SDK location (auto-generado por Android Studio)
+sdk.dir=C:\\Users\\TuUsuario\\AppData\\Local\\Android\\Sdk

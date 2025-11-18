@@ -1,14 +1,19 @@
 package com.example.healthconnectai
 
 import android.media.MediaPlayer
+import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.widget.Toast
+import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
 import com.example.healthconnectai.databinding.ActivityAudioAnalysisBinding
 import java.io.File
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 
 class AudioAnalysisActivity : AppCompatActivity() {
 
@@ -16,6 +21,8 @@ class AudioAnalysisActivity : AppCompatActivity() {
     private var recorder: MediaRecorder? = null
     private var player: MediaPlayer? = null
     private lateinit var audioFile: File
+    private val audioDirectory by lazy { File(cacheDir, "audio_history") }
+    private val audioFilesList = mutableListOf<File>()
 
     // Lanzador moderno para pedir permiso RECORD_AUDIO
     private val requestAudioPermission =
@@ -32,6 +39,11 @@ class AudioAnalysisActivity : AppCompatActivity() {
         binding = ActivityAudioAnalysisBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Crear directorio de historial
+        if (!audioDirectory.exists()) {
+            audioDirectory.mkdirs()
+        }
+
         // Crear archivo temporal en cacheDir para no necesitar WRITE_EXTERNAL_STORAGE
         audioFile = File.createTempFile("audio_record_", ".3gp", cacheDir)
 
@@ -47,7 +59,26 @@ class AudioAnalysisActivity : AppCompatActivity() {
         binding.btnPlay.setOnClickListener {
             playAudioSafe()
         }
+        
+        // Botón para analizar audio actual
+        binding.btnAnalyzeAudio.setOnClickListener {
+            if (::audioFile.isInitialized && audioFile.exists()) {
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra("audioFile", audioFile.absolutePath)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "No hay audio para analizar. Graba primero.", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
         binding.btnBackHomeAudio.setOnClickListener { finish() }
+        
+        // Botón para ver historial
+        binding.btnViewHistory.setOnClickListener {
+            showAudioHistory()
+        }
+        
+        loadAudioHistory()
     }
 
     private fun startRecordingInternal() {
@@ -92,6 +123,19 @@ class AudioAnalysisActivity : AppCompatActivity() {
                 try { it.release() } catch (ignored: Exception) {}
                 recorder = null
                 Toast.makeText(this, "Grabación detenida. Guardada en: ${audioFile.name}", Toast.LENGTH_SHORT).show()
+                
+                // Guardar archivo en directorio de historial
+                val savedFile = File(audioDirectory, "audio_${System.currentTimeMillis()}.3gp")
+                try {
+                    audioFile.copyTo(savedFile, overwrite = true)
+                    loadAudioHistory()
+                    // Lanzar ResultActivity para analizar audio
+                    val intent = Intent(this, ResultActivity::class.java)
+                    intent.putExtra("audioFile", savedFile.absolutePath)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         } ?: run {
             Toast.makeText(this, "No hay grabación activa.", Toast.LENGTH_SHORT).show()
@@ -145,4 +189,77 @@ class AudioAnalysisActivity : AppCompatActivity() {
         player = null
     }
 
+    private fun loadAudioHistory() {
+        audioFilesList.clear()
+        if (audioDirectory.exists()) {
+            audioFilesList.addAll(audioDirectory.listFiles()?.sortedByDescending { it.lastModified() } ?: emptyList())
+        }
+    }
+
+    private fun showAudioHistory() {
+        loadAudioHistory()
+        if (audioFilesList.isEmpty()) {
+            Toast.makeText(this, "Sin grabaciones en el historial", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val displayNames = audioFilesList.map { file ->
+            val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            val date = sdf.format(Date(file.lastModified()))
+            "${file.name} - $date (${file.length() / 1024}KB)"
+        }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Historial de Grabaciones (${audioFilesList.size})")
+            .setItems(displayNames) { _, which ->
+                showAudioOptions(audioFilesList[which], displayNames[which])
+            }
+            .setNegativeButton("Cerrar", null)
+            .show()
+    }
+
+    private fun showAudioOptions(file: File, displayName: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Opciones")
+            .setMessage(displayName)
+            .setPositiveButton("Reproducir") { _, _ ->
+                playAudioFile(file)
+            }
+            .setNeutralButton("Analizar") { _, _ ->
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra("audioFile", file.absolutePath)
+                startActivity(intent)
+            }
+            .setNegativeButton("Borrar") { _, _ ->
+                AlertDialog.Builder(this)
+                    .setTitle("Confirmar borrado")
+                    .setMessage("¿Eliminar $displayName?")
+                    .setPositiveButton("Sí, borrar") { _, _ ->
+                        file.delete()
+                        loadAudioHistory()
+                        Toast.makeText(this, "Archivo eliminado", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+            .show()
+    }
+
+    private fun playAudioFile(file: File) {
+        try {
+            player?.release()
+            player = MediaPlayer().apply {
+                setDataSource(file.absolutePath)
+                prepare()
+                start()
+                setOnCompletionListener {
+                    Toast.makeText(this@AudioAnalysisActivity, "Reproducción finalizada.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            Toast.makeText(this, "Reproduciendo: ${file.name}", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Error reproduciendo audio: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
 }

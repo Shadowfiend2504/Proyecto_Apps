@@ -1,4 +1,5 @@
-package com.example.healthconnectai
+
+package com.example.healthconnectai.test
 
 import android.Manifest
 import android.app.Activity
@@ -11,7 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.healthconnectai.databinding.ActivityImageAnalysisBinding
 
-class ImageAnalysisActivity : AppCompatActivity() {
+class TestImageAnalysisActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityImageAnalysisBinding
 

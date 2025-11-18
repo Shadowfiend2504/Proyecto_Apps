@@ -1,5 +1,6 @@
-package com.example.healthconnectai
+package com.example.healthconnectai.ui
 
+import com.example.healthconnectai.R
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -9,8 +10,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import kotlin.jvm.java
-import kotlin.text.substring
+import com.example.healthconnectai.MainActivity
 
 class SplashActivity : AppCompatActivity() {
 

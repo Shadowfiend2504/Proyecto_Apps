@@ -1,0 +1,318 @@
+package com.example.healthconnectai.data.ai
+
+import android.graphics.Bitmap
+import android.util.Base64
+import com.google.gson.Gson
+import com.google.gson.JsonElement
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.logging.HttpLoggingInterceptor
+import android.util.Log
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import java.util.concurrent.TimeUnit
+import java.io.ByteArrayOutputStream
+
+/**
+ * Cliente REST para Google Generative Language API (Gemini)
+ * Implementación ligera basada en OkHttp + Gson para evitar SDKs no disponibles.
+ */
+class GeminiHealthClient(private val apiKey: String) {
+    private val gson = Gson()
+
+    // Cliente OkHttp con timeouts y logging para depuración.
+    private val client: OkHttpClient by lazy {
+        val logger = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BASIC
+        }
+        OkHttpClient.Builder()
+            .callTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(logger)
+            .build()
+    }
+    // Usamos un modelo estable disponible (texto). Ajustar según disponibilidad de la API.
+    private val baseUrl = "https://generativelanguage.googleapis.com/v1/models"
+    private val modelId = "gemini-1.5-pro-latest"
+
+    suspend fun analyzeHealthData(metrics: HealthMetrics): DiagnosisResult = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) return@withContext DiagnosisResult.error("GEMINI_API_KEY está vacío. Añade tu clave en local.properties y recompila.")
+
+        val prompt = buildComprehensiveHealthPrompt(metrics)
+        try {
+            val apiResp = callTextModel(prompt)
+            // Si la respuesta indica un error, convertir a DiagnosisResult.error
+            if (apiResp.startsWith("ERROR:")) {
+                return@withContext DiagnosisResult.error(apiResp.removePrefix("ERROR:").trim())
+            }
+            parseHealthDiagnosis(apiResp)
+        } catch (t: Throwable) {
+            Log.e("GeminiHealthClient", "analyzeHealthData failed", t)
+            DiagnosisResult.error("Error en análisis de IA: ${t.message}")
+        }
+    }
+
+    suspend fun analyzeHealthImage(bitmap: Bitmap, bodyPart: String, additionalContext: String = ""): String = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) return@withContext "ERROR: GEMINI_API_KEY está vacío. Añade tu clave en local.properties y recompila."
+
+        try {
+            val b64 = bitmapToBase64(bitmap)
+            val prompt = "Analiza esta imagen del cuerpo: $bodyPart. $additionalContext"
+            val resp = callTextModelWithImage(prompt, b64)
+            if (resp.startsWith("ERROR:")) resp else resp
+        } catch (t: Throwable) {
+            Log.e("GeminiHealthClient", "analyzeHealthImage failed", t)
+            "Error al analizar imagen: ${t.message}"
+        }
+    }
+
+    suspend fun analyzeVoiceMetrics(duration: Long, pitchVariation: Float, breathingPattern: String, coughDetected: Boolean): String = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) return@withContext "ERROR: GEMINI_API_KEY está vacío. Añade tu clave en local.properties y recompila."
+
+        val prompt = "Analiza métricas de voz:\n- Duración: ${duration}ms\n- PitchVar: ${pitchVariation}\n- Respiración: $breathingPattern\n- Tos: $coughDetected"
+        try {
+            val resp = callTextModel(prompt)
+            if (resp.startsWith("ERROR:")) resp else resp
+        } catch (t: Throwable) {
+            Log.e("GeminiHealthClient", "analyzeVoiceMetrics failed", t)
+            "Error al analizar audio: ${t.message}"
+        }
+    }
+
+    private fun buildComprehensiveHealthPrompt(metrics: HealthMetrics): String {
+        val profile = metrics.userProfile
+        val tasks = if (metrics.taskHistory.isNotEmpty()) metrics.taskHistory.joinToString("\n") { "- ${it.symptom} (sev:${it.severity}, dur:${it.duration})" } else "Sin síntomas reportados"
+        val audio = metrics.audioAnalysis
+        val image = metrics.imageAnalysis
+        val location = metrics.location
+
+        val age = profile?.age ?: 0
+        val gender = profile?.gender ?: "N/D"
+        val history = profile?.medicalHistory?.joinToString(", ") ?: "N/D"
+
+        return """
+            DIAGNÓSTICO PRELIMINAR
+            Timestamp: ${metrics.timestamp}
+
+            PERFIL: edad=$age, género=$gender, antecedentes=$history
+
+            SÍNTOMAS:
+            $tasks
+
+            AUDIO: ${audio?.let { "dur=${it.duration}ms, pitch=${it.averagePitch}, cough=${it.coughDetected}" } ?: "N/D"}
+            IMAGEN: ${image?.let { "parte=${it.bodyPart}, desc=${it.description}" } ?: "N/D"}
+            UBICACIÓN: ${location?.let { "lat=${it.latitude}, lon=${it.longitude}" } ?: "N/D"}
+
+            Instrucciones: responde con un bloque claro que incluya: DIAGNÓSTICO PRELIMINAR, POSIBLES CONDICIONES (3), URGENCIA (BAJA/MEDIA/ALTA/CRÍTICA), RECOMENDACIONES (3-5) y si debe consultar a un médico. Añade disclaimer.
+        """.trimIndent()
+    }
+
+    // Llama al modelo de texto (sin imagen)
+    private suspend fun callTextModel(prompt: String): String = withContext(Dispatchers.IO) {
+        val url = "$baseUrl/$modelId:generateContent?key=$apiKey"
+        // Construir payload para v1 API: contents[].parts[].text
+        val json = com.google.gson.JsonObject()
+        val contentsArray = com.google.gson.JsonArray()
+        val contentObj = com.google.gson.JsonObject()
+        val partsArray = com.google.gson.JsonArray()
+        val partObj = com.google.gson.JsonObject()
+        partObj.addProperty("text", prompt)
+        partsArray.add(partObj)
+        contentObj.add("parts", partsArray)
+        contentsArray.add(contentObj)
+        json.add("contents", contentsArray)
+        
+        val genConfig = com.google.gson.JsonObject()
+        genConfig.addProperty("temperature", 0.6)
+        json.addProperty("maxOutputTokens", 800)
+        val body = json.toString()
+
+        val req = Request.Builder()
+            .url(url)
+            .post(body.toRequestBody("application/json".toMediaType()))
+            .build()
+
+        try {
+            client.newCall(req).execute().use { resp ->
+                val respBody = resp.body?.string()
+                if (!resp.isSuccessful) {
+                    val detail = respBody?.takeIf { it.isNotBlank() } ?: "(no body)"
+                    // Mensajes más amigables para códigos comunes
+                    when (resp.code) {
+                        401, 403 -> return@withContext "ERROR: Autenticación fallida (código ${resp.code}). Verifica GEMINI_API_KEY y restricciones de la clave. Detalle: $detail"
+                        429 -> return@withContext "ERROR: Límite de peticiones alcanzado (429). Intenta más tarde."
+                        404 -> return@withContext "ERROR: Modelo o endpoint no encontrado (404). Asegúrate de que 'gemini-1.5-pro-latest' está disponible y que la API Generative Language está habilitada. Detalle: $detail"
+                        else -> return@withContext "ERROR: API error ${resp.code}: $detail"
+                    }
+                }
+                val s = respBody ?: return@withContext "ERROR: Respuesta vacía del servicio"
+                val extracted = extractTextFromResponse(s)
+                return@withContext extracted ?: "(sin texto extraído)"
+            }
+        } catch (t: SocketTimeoutException) {
+            Log.e("GeminiHealthClient", "Timeout calling Gemini API", t)
+            return@withContext "ERROR: Tiempo de espera agotado al contactar la API de IA"
+        } catch (t: UnknownHostException) {
+            Log.e("GeminiHealthClient", "UnknownHostException", t)
+            return@withContext "ERROR: No se puede resolver el host de la API. Comprueba tu conexión a internet"
+        } catch (t: Exception) {
+            Log.e("GeminiHealthClient", "callTextModel exception", t)
+            return@withContext "ERROR: ${t.message}"
+        }
+    }
+
+
+    // Llama al modelo incluyendo una imagen en base64
+    private suspend fun callTextModelWithImage(prompt: String, base64Image: String): String = withContext(Dispatchers.IO) {
+        val url = "$baseUrl/$modelId:generateContent?key=$apiKey"
+        val json = com.google.gson.JsonObject()
+        val contentsArray = com.google.gson.JsonArray()
+        val contentObj = com.google.gson.JsonObject()
+        val partsArray = com.google.gson.JsonArray()
+        
+        // Parte de texto
+        val textPart = com.google.gson.JsonObject()
+        textPart.addProperty("text", prompt)
+        partsArray.add(textPart)
+        
+        // Parte de imagen en base64
+        val imagePart = com.google.gson.JsonObject()
+        val imageBlobObj = com.google.gson.JsonObject()
+        imageBlobObj.addProperty("mimeType", "image/jpeg")
+        imageBlobObj.addProperty("data", base64Image)
+        imagePart.add("inlineData", imageBlobObj)
+        partsArray.add(imagePart)
+        
+        contentObj.add("parts", partsArray)
+        contentsArray.add(contentObj)
+        json.add("contents", contentsArray)
+        
+        val genConfig = com.google.gson.JsonObject()
+        genConfig.addProperty("temperature", 0.6)
+        json.addProperty("maxOutputTokens", 600)
+
+        val req = Request.Builder()
+            .url(url)
+            .post(json.toString().toRequestBody("application/json".toMediaType()))
+            .build()
+
+        try {
+            client.newCall(req).execute().use { resp ->
+                val respBody = resp.body?.string()
+                if (!resp.isSuccessful) {
+                    val detail = respBody?.takeIf { it.isNotBlank() } ?: "(no body)"
+                    return@withContext "ERROR: API error ${resp.code}: $detail"
+                }
+                return@withContext respBody ?: "(no body)"
+            }
+        } catch (t: Exception) {
+            Log.e("GeminiHealthClient", "callTextModelWithImage exception", t)
+            return@withContext "ERROR: ${t.message}"
+        }
+    }
+
+    private fun extractTextFromResponse(jsonString: String): String {
+        return try {
+            val json = gson.fromJson(jsonString, JsonElement::class.java)
+            // Navegar de forma segura según estructura esperada
+            val content = jsonAsString(json)
+            content ?: jsonString
+        } catch (e: Exception) {
+            Log.e("GeminiHealthClient", "extractTextFromResponse parse error", e)
+            jsonString
+        }
+    }
+
+    private fun jsonAsString(el: JsonElement): String? {
+        // Estructura moderna de Gemini API v1: candidates[0].content.parts[0].text
+        try {
+            val obj = el.asJsonObject
+            if (obj.has("candidates")) {
+                val cand = obj.getAsJsonArray("candidates").get(0).asJsonObject
+                if (cand.has("content")) {
+                    val content = cand.getAsJsonObject("content")
+                    if (content.has("parts")) {
+                        val parts = content.getAsJsonArray("parts")
+                        if (parts.size() > 0) {
+                            val part = parts.get(0).asJsonObject
+                            if (part.has("text")) return part.get("text").asString
+                        }
+                    }
+                }
+            }
+            if (obj.has("predictions")) return obj.getAsJsonArray("predictions").get(0).asString
+            if (obj.has("output")) return obj.get("output").asString
+        } catch (_: Exception) {}
+        return null
+    }
+
+    private fun parseHealthDiagnosis(responseText: String): DiagnosisResult {
+        try {
+            val urgency = when {
+                responseText.contains("CRÍTICA", ignoreCase = true) -> "CRÍTICA"
+                responseText.contains("ALTA", ignoreCase = true) -> "ALTA"
+                responseText.contains("MEDIA", ignoreCase = true) -> "MEDIA"
+                else -> "BAJA"
+            }
+
+            val conditions = Regex("(?i)posibles condiciones:?(.*?)(?=urgencia|recomend|$)", RegexOption.DOT_MATCHES_ALL)
+                .find(responseText)?.groupValues?.get(1)?.lines()?.map { it.trim().trimStart('-', '•', '0', '1', '2', '3', '.') }?.filter { it.isNotBlank() } ?: emptyList()
+
+            val recs = Regex("(?i)recomendaciones:?(.*?)(?=¿consultar|consultar|$)", RegexOption.DOT_MATCHES_ALL)
+                .find(responseText)?.groupValues?.get(1)?.lines()?.map { it.trim().trimStart('-', '•', '0', '1', '2', '.') }?.filter { it.isNotBlank() } ?: emptyList()
+
+            val diag = Regex("(?i)diagn[oó]stico preliminar:?(.*?)(?=posibles|urgencia|$)", RegexOption.DOT_MATCHES_ALL).find(responseText)?.groupValues?.get(1)?.trim() ?: responseText.take(200)
+
+            val shouldConsult = urgency == "ALTA" || urgency == "CRÍTICA"
+
+            return DiagnosisResult(
+                preliminaryDiagnosis = diag,
+                potentialConditions = conditions.take(5),
+                urgencyLevel = urgency,
+                recommendations = if (recs.isNotEmpty()) recs.take(5) else listOf("Consultar a un profesional de salud"),
+                shouldConsultDoctor = shouldConsult,
+                success = true,
+                errorMessage = null
+            )
+        } catch (t: Throwable) {
+            return DiagnosisResult.error(t.message ?: "Error parsing response")
+        }
+    }
+
+    // Exponer parsing para que ViewModel pueda convertir texto crudo en DiagnosisResult
+    fun parseResponseToDiagnosis(responseText: String): DiagnosisResult {
+        return try {
+            parseHealthDiagnosis(responseText)
+        } catch (t: Throwable) {
+            DiagnosisResult.error("Error parsing IA response: ${t.message}")
+        }
+    }
+
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val baos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
+        val bytes = baos.toByteArray()
+        return Base64.encodeToString(bytes, Base64.NO_WRAP)
+    }
+}
+
+// Helper pequeño para construir JSON manualmente sin depender de clases extra
+private class JsonBuilder {
+    private val map = com.google.gson.JsonObject()
+    fun add(name: String, value: String) { map.addProperty(name, value) }
+    fun add(name: String, value: Number) { map.addProperty(name, value) }
+    fun add(name: String, value: Boolean) { map.addProperty(name, value) }
+    fun build(): String = map.toString()
+}
+
+
+
+
+
+

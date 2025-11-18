@@ -37,7 +37,7 @@
 
         <!-- ✨ NUEVA PANTALLA DE PRESENTACIÓN (Splash) -->
         <activity
-            android:name=".SplashActivity"
+            android:name=".ui.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.HealthConnectAI">
             <intent-filter>
