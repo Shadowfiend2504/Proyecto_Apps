@@ -1,19 +1,10 @@
 package com.example.healthconnectai.data.api
 
-import com.example.healthconnectai.data.models.PlacesApiResponse
 import com.example.healthconnectai.data.models.PlaceDetailsResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface PlacesApiService {
-
-    @GET("place/nearbysearch/json")
-    suspend fun getNearbyHealthcare(
-        @Query("location") location: String,
-        @Query("radius") radius: Int = 5000,
-        @Query("keyword") keyword: String = "hospital|clinica|centro medico",
-        @Query("key") apiKey: String
-    ): PlacesApiResponse
+interface PlaceDetailsApiService {
 
     @GET("place/details/json")
     suspend fun getPlaceDetails(

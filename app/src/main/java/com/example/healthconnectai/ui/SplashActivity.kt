@@ -22,7 +22,7 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        val logo = findViewById<ImageView>(R.id.imgLogo)
+        val logo = findViewById<ImageView>(R.id.ic_app_logo)
         val title = findViewById<TextView>(R.id.txtAppName)
         txtDescription = findViewById(R.id.txtDescription)
         btnStart = findViewById(R.id.btnStart)

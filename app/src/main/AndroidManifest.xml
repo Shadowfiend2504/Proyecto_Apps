@@ -13,16 +13,16 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_app_logo"
+        android:roundIcon="@mipmap/ic_app_logo"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.HealthConnectAI">
 
-        <!-- 🗺️ Clave de Google Maps -->
+    <!-- 🗺️ Clave de Google Maps -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAiq6H_qiNeVXv1PAW8aTo-RobHWc2Ks4Y" />
+            android:value="${MAPS_API_KEY}" />
 
         <!-- 🧩 Activities secundarias -->
         <activity android:name=".ui.tasks.TareasActivity" />

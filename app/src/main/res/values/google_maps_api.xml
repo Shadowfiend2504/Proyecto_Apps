@@ -1,0 +1,10 @@
+<resources>
+    <!--
+        Clave de API para Google Maps.
+        Esta clave solo debe usarse en desarrollo y pruebas.
+        Para producción, recuerda restringir la clave en Google Cloud.
+    -->
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
+        AIzaSyAHVu6s8WFZ33QYjsbxJsDS6rId19WtZWc
+    </string>
+</resources>

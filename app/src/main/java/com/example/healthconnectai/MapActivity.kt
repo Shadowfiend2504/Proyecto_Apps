@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -13,9 +14,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.healthconnectai.databinding.ActivityMapBinding
+import com.example.healthconnectai.data.api.PlacesApiService
 import com.example.healthconnectai.data.models.HospitalLocation
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.example.healthconnectai.data.models.PlacesApiResponse
+import com.example.healthconnectai.data.models.PlaceResult
+import com.example.healthconnectai.data.models.PlaceDetailsResponse
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -26,18 +30,22 @@ import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import com.example.healthconnectai.data.api.PlacesApiService
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var binding: ActivityMapBinding
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var googleMap: GoogleMap
+
     private val LOCATION_PERMISSION_REQUEST = 1001
-    private val PLACES_API_KEY = BuildConfig.GOOGLE_PLACES_API_KEY
-    
+    private val GOOGLE_API_KEY = BuildConfig.GOOGLE_API_KEY.trim()
+
     private var currentLocation: Location? = null
     private val hospitales = mutableListOf<HospitalLocation>()
+
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+
     private val placesApiService by lazy {
         Retrofit.Builder()
             .baseUrl("https://maps.googleapis.com/maps/api/")
@@ -52,41 +60,30 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         setContentView(binding.root)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        
-        // Verificación temprana de API Key de Google Places
-        if (PLACES_API_KEY.isBlank()) {
+
+        if (GOOGLE_API_KEY.isBlank()) {
             Toast.makeText(
                 this,
-                "Falta GOOGLE_PLACES_API_KEY en local.properties. Configure la clave para usar el mapa.",
+                "ERROR: Falta GOOGLE_API_KEY en local.properties",
                 Toast.LENGTH_LONG
             ).show()
             binding.progressLayout.visibility = View.GONE
             return
         }
 
-        // Obtener el MapFragment
         val mapFragment = supportFragmentManager.findFragmentById(R.id.mapFragment) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
 
-        // Eventos de botones
-        binding.btnCloseCard.setOnClickListener {
-            binding.hospitalInfoCard.visibility = View.GONE
-        }
+        binding.btnCloseCard.setOnClickListener { binding.hospitalInfoCard.visibility = View.GONE }
+        binding.btnOpenInMaps.setOnClickListener { abrirEnGoogleMaps() }
 
-        binding.btnOpenInMaps.setOnClickListener {
-            abrirEnGoogleMaps()
-        }
-
-        // Verificar permisos y obtener ubicación
         checkLocationPermission()
     }
 
     private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        val permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -98,52 +95,54 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun obtenerUbicacion() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
         ) return
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            location?.let {
-                currentLocation = it
-                val latLng = LatLng(it.latitude, it.longitude)
+        locationRequest = LocationRequest.Builder(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            5000L
+        ).build()
 
-                // Mover cámara del mapa a ubicación actual
-                if (::googleMap.isInitialized) {
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14f))
-                    
-                    // Agregar marcador de ubicación actual
-                    googleMap.addMarker(
-                        MarkerOptions()
-                            .position(latLng)
-                            .title("Mi ubicación")
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-                    )
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                locationResult.lastLocation?.let { location ->
+                    currentLocation = location
+                    val latLng = LatLng(location.latitude, location.longitude)
+
+                    if (::googleMap.isInitialized) {
+                        googleMap.isMyLocationEnabled = true
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                        googleMap.addMarker(
+                            MarkerOptions()
+                                .position(latLng)
+                                .title("Mi ubicación")
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                        )
+                    }
+
+                    buscarHospitalesCercanos(location.latitude, location.longitude)
                 }
-
-                // Buscar hospitales cercanos
-                buscarHospitalesCercanos(it.latitude, it.longitude)
-            } ?: run {
-                Toast.makeText(this, "No se pudo obtener la ubicación actual.", Toast.LENGTH_SHORT).show()
-                binding.progressLayout.visibility = View.GONE
             }
         }
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, mainLooper)
     }
 
-    private fun buscarHospitalesCercanos(latitude: Double, longitude: Double) {
+    private fun buscarHospitalesCercanos(lat: Double, lng: Double) {
         lifecycleScope.launch {
             try {
-                val location = "$latitude,$longitude"
-                val response = placesApiService.getNearbyHospitals(
-                    location = location,
+                val response: PlacesApiResponse = placesApiService.getNearbyHealthcare(
+                    location = "$lat,$lng",
                     radius = 5000,
-                    apiKey = PLACES_API_KEY
+                    keyword = "hospital",
+                    apiKey = GOOGLE_API_KEY
                 )
 
-                if (response.status == "OK") {
+                if (response.results.isNotEmpty()) {
                     hospitales.clear()
-                    
+                    googleMap.clear()
+
                     response.results.forEach { result ->
                         val hospital = HospitalLocation(
                             placeId = result.place_id,
@@ -155,21 +154,16 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                         )
                         hospitales.add(hospital)
 
-                        // Agregar marcador al mapa
-                        val markerLatLng = LatLng(hospital.latitude, hospital.longitude)
                         val marker = googleMap.addMarker(
                             MarkerOptions()
-                                .position(markerLatLng)
+                                .position(LatLng(hospital.latitude, hospital.longitude))
                                 .title(hospital.name)
                                 .snippet(hospital.address)
                                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
                         )
-
-                        // Guardar referencia del hospital en el marcador
                         marker?.tag = hospital
                     }
 
-                    // Listener para clics en marcadores
                     googleMap.setOnMarkerClickListener { marker ->
                         val hospital = marker.tag as? HospitalLocation
                         hospital?.let { mostrarInfoHospital(it) }
@@ -178,81 +172,108 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     binding.progressLayout.visibility = View.GONE
                 } else {
-                    Toast.makeText(this@MapActivity, "Error: ${response.status}", Toast.LENGTH_SHORT).show()
                     binding.progressLayout.visibility = View.GONE
+                    Log.w("MapActivity", "No se encontraron hospitales cercanos")
                 }
+
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(
-                    this@MapActivity,
-                    "Error al buscar hospitales: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
                 binding.progressLayout.visibility = View.GONE
             }
         }
     }
 
     private fun mostrarInfoHospital(hospital: HospitalLocation) {
-        binding.hospitalName.text = hospital.name
-        binding.hospitalAddress.text = hospital.address
+        // Mostramos la tarjeta y el progreso
+        binding.progressLayout.visibility = View.VISIBLE
         binding.hospitalInfoCard.visibility = View.VISIBLE
 
-        // Guardar hospital actual para usarlo en "Abrir en Maps"
-        binding.btnOpenInMaps.tag = hospital
-    }
+        // Título y calificación
+        binding.hospitalName.text = "🏥 ${hospital.name}"
+        binding.hospitalRating.text = "⭐ Calificación: ${hospital.rating}"
 
-    private fun abrirEnGoogleMaps() {
-        val hospital = binding.btnOpenInMaps.tag as? HospitalLocation
-        hospital?.let {
-            val uri = Uri.parse("geo:${it.latitude},${it.longitude}?q=${Uri.encode(it.name)}")
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            intent.setPackage("com.google.android.apps.maps")
+        // Inicializamos campos mientras cargamos detalles
+        binding.hospitalAddress.text = "Cargando dirección..."
+        binding.hospitalPhone.text = "Cargando teléfono..."
+        binding.hospitalWebsite.text = "Cargando sitio web..."
+        binding.hospitalOpening.text = "Cargando horario..."
 
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-            } else {
-                // Fallback a navegador
-                val browserIntent = Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://www.google.com/maps/search/${Uri.encode(it.name)}/@${it.latitude},${it.longitude},15z")
+        lifecycleScope.launch {
+            try {
+                val detailsResponse: PlaceDetailsResponse = placesApiService.getPlaceDetails(
+                    placeId = hospital.placeId,
+                    apiKey = GOOGLE_API_KEY
                 )
-                startActivity(browserIntent)
+                val details = detailsResponse.result
+
+                // Formato bonito con iconos
+                val address = details?.formatted_address?.let { "📍 $it" } ?: "Dirección no disponible"
+                val phone = details?.formatted_phone_number?.let { "📞 $it" } ?: "Teléfono no disponible"
+                val website = details?.website?.let { "🌐 $it" } ?: "Sitio web no disponible"
+                val opening = details?.opening_hours?.open_now?.let { if (it) "🟢 Abierto ahora" else "🔴 Cerrado ahora" }
+                    ?: "Horario no disponible"
+
+                // Asignamos al binding
+                binding.hospitalAddress.text = address
+                binding.hospitalPhone.text = phone
+                binding.hospitalWebsite.text = website
+                binding.hospitalOpening.text = opening
+
+                // Guardamos referencia para abrir en Google Maps
+                binding.btnOpenInMaps.tag = hospital
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                binding.hospitalAddress.text = "Información no disponible"
+                binding.hospitalPhone.text = "-"
+                binding.hospitalWebsite.text = "-"
+                binding.hospitalOpening.text = "-"
+            } finally {
+                // Ocultamos el loader
+                binding.progressLayout.visibility = View.GONE
             }
+        }
+    }
+    private fun abrirEnGoogleMaps() {
+        val hospital = binding.btnOpenInMaps.tag as? HospitalLocation ?: return
+        val uri = Uri.parse("geo:${hospital.latitude},${hospital.longitude}?q=${Uri.encode(hospital.name)}")
+        val intent = Intent(Intent.ACTION_VIEW, uri).apply { setPackage("com.google.android.apps.maps") }
+
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            startActivity(Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://www.google.com/maps/search/${Uri.encode(hospital.name)}/@${hospital.latitude},${hospital.longitude},15z")))
         }
     }
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
-        
-        // Configurar el mapa
         googleMap.uiSettings.apply {
             isZoomControlsEnabled = true
             isCompassEnabled = true
             isMyLocationButtonEnabled = true
         }
 
-        // Si ya tenemos ubicación, centrar el mapa
         currentLocation?.let {
-            val latLng = LatLng(it.latitude, it.longitude)
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14f))
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 15f))
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST &&
-            grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (requestCode == LOCATION_PERMISSION_REQUEST && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             obtenerUbicacion()
         } else {
             Toast.makeText(this, "Permiso de ubicación denegado.", Toast.LENGTH_SHORT).show()
             binding.progressLayout.visibility = View.GONE
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::fusedLocationClient.isInitialized && ::locationCallback.isInitialized) {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
         }
     }
 }
