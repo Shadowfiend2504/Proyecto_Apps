@@ -1,6 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
         Clave de API para Google Maps.
+        Se obtiene desde local.properties (GOOGLE_API_KEY) en tiempo de compilación.
         Esta clave solo debe usarse en desarrollo y pruebas.
         Para producción, recuerda restringir la clave en Google Cloud.
     -->

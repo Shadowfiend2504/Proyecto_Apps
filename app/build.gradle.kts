@@ -18,6 +18,28 @@ val localProps = Properties().apply {
 val geminiApiKeyFromLocal = localProps.getProperty("GEMINI_API_KEY") ?: ""
 val googleApiKeyFromLocal = localProps.getProperty("GOOGLE_API_KEY") ?: "" // <- clave unificada
 
+// Generar google_maps_api.xml dinámicamente desde local.properties
+val generateGoogleMapsApiTask = tasks.register("generateGoogleMapsApi") {
+    doLast {
+        val outputDir = project.file("src/main/res/values")
+        outputDir.mkdirs()
+        val outputFile = file("$outputDir/google_maps_api.xml")
+        outputFile.writeText("""<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Clave de API para Google Maps.
+        Se obtiene desde local.properties (GOOGLE_API_KEY) en tiempo de compilación.
+        Esta clave solo debe usarse en desarrollo y pruebas.
+        Para producción, recuerda restringir la clave en Google Cloud.
+    -->
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
+        $googleApiKeyFromLocal
+    </string>
+</resources>
+""")
+    }
+}
+
 android {
     namespace = "com.example.healthconnectai"
     compileSdk = 34
@@ -64,6 +86,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+// Agregar la tarea como dependencia del preBuild (fuera del bloque android)
+tasks.named("preBuild").configure {
+    dependsOn(generateGoogleMapsApiTask)
 }
 
 dependencies {
