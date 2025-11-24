@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/badge-maker?url=https%3A%2F%2Fdeepwiki.com%2FShadowfiend2504%2FProyecto_Apps)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Shadowfiend2504/Proyecto_Apps)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Google Gemini](https://img.shields.io/badge/Google_Gemini-8E75B6?style=for-the-badge&logo=google&logoColor=white)
